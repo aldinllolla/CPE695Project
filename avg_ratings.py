@@ -1,47 +1,22 @@
 import pandas as pd
 import numpy as np
-import requests
-import threading
-import time
 
-rating_df = pd.read_csv('ratings.csv')
-
-global new_df
-new_df = pd.DataFrame(columns=['movieId', 'total_rating','count','avg_rating'])
+rating_df = pd.read_csv("ratings.csv")
 count = rating_df['movieId'].value_counts()
+movieset = list(set(rating_df['movieId']))
+del rating_df['timestamp']
 
-#print(count)
-#print(rating_df.loc[rating_df['movieId'] == 123607]['rating'].sum())
+data = np.zeros((len(movieset),4))
 j = 0
-movie_dict = {}
+for i in movieset:
+    rating_sum = rating_df.loc[rating_df['movieId'] == i]['rating'].sum()
+    count_for_movie = count[i]
+    avg_rating = rating_sum / count_for_movie
+    data[j, 0] = i #set to movieId
+    data[j, 1] = rating_sum
+    data[j, 2] = count_for_movie
+    data[j, 3] = avg_rating
+    j = j + 1
 
-def worker(start, end):
-    global new_df
-    j = 0
-    for i in range (start, end):
-        row = rating_df.iloc[i]
-        if not row['movieId'] in movie_dict:
-            movieId = row['movieId']
-            movie_dict[movieId] = i
-            rating_sum = rating_df.loc[rating_df['movieId'] == movieId]['rating'].sum()
-            count_for_this_movie = count[movieId]
-            new_df = new_df.append({'movieId' : movieId, 'total_rating' : rating_sum,'count' : count_for_this_movie,'avg_rating' : rating_sum/ count_for_this_movie}, ignore_index=True)
-            #new_df.loc[movieId] = [movieId,rating_sum,count_for_this_movie,rating_sum/ count_for_this_movie]
-            print(i)
-
-# worker(0,19967646)
-i = 0
-threads = []
-while (i < 19967646):
-    t = threading.Thread(target= worker, args=(i,i+1996764,))
-    threads.append(t)
-    t.start()
-    i = i + 1996764
-
-for j in threads:
-    j.join()
-
-new_df.to_csv("new_data.csv")
-# new_dict = {}
-# for i in rating_df['movieId']:
-#     new_dict[i] = rating_df.loc[i, 'rating']
+df = pd.DataFrame(data, columns=['movieId', 'total_rating','count','avg_rating'])
+df.to_csv("avg_ratings.csv")

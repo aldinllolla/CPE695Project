@@ -68,4 +68,4 @@ for ind in low_ratings:
 df_final.drop(ind_list, inplace=True)
 
 #Finally, save the file
-df.to_csv("final_data_removed_lowcounts.csv")
+df_final.to_csv("final_data_removed_lowcounts.csv")
